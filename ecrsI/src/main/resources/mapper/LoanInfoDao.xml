@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.LoanInfoDao">
+
+
+
+
+<select id="searchAllNoPur" resultType="LoanInfo">
+		SELECT serialNo
+		FROM Loan_Info
+		where  loan_purpose  is null
+	</select>
+	
+	<!--授信审核、放款确认状态修改。成功-否 -->
+	<update id="updateDataBySer" parameterType="com.ejie.nbrs.entity.LoanInfo">
+		UPDATE
+		loan_info 		
+		SET
+		loan_purpose=#{loanPurpose}
+		where
+		serialNo =#{serialNo}
+	</update>
+	<!--添加贷款信息 添加了默认的节点码和审核状态码 -->
+	<insert id="insertBaseLoanInfo" useGeneratedKeys="true"
+		keyProperty="loanId" parameterType="com.ejie.nbrs.entity.LoanInfo">
+		insert into loan_info
+		(serialNo,channelCode,real_name,e_product,city,app_money,
+		rate,repay_way,app_date,ejie_send_time,node_status,flow_status
+		)
+		values (#{serialNo},#{channelCode},#{realName},'好事贷',#{city},#{appMoney},
+		#{rate},#{repayWay},#{appDate},#{ejieSendTime},1080,-1)
+		ON DUPLICATE KEY UPDATE		
+		channelCode=VALUES(channelCode),
+		real_name=VALUES(real_name),
+		e_product=VALUES(e_product),
+		city=VALUES(city),
+		app_money=VALUES(app_money),
+		rate=VALUES(rate),
+		repay_way=VALUES(repay_way),		
+		ejie_send_time=VALUES(ejie_send_time)
+	</insert>
+
+	<!--添加贷款信息 添加了默认的节点码和审核状态码 -->
+	<insert id="insertByMasterInfo" useGeneratedKeys="true"
+		keyProperty="loanId" parameterType="com.ejie.nbrs.entity.LoanInfo">
+		insert into loan_info
+		(serialNo,city,app_date,e_product,app_money,ejie_send_time,
+		repay_way,rate,periods,loan_purpose,a_base_id,
+		c_card_number,c_card_bank,c_Branch_Bank,c_card_name,guarantee_id,status,node_status,flow_status,
+		repay_Card_No,repay_Card_Bank,repay_Card_Branck,repay_Card_User,guarantee_object,channelCode,
+		real_name,garanty_type
+		)
+		values (#{serialNo},#{city},#{appDate},'好事贷',#{appMoney},#{ejieSendTime},
+		#{repayWay},#{rate},#{periods},#{loanPurpose},#{aBaseId},
+		#{cCardNumber},#{cCardBank},#{branchBank},#{cCardName},#{guaranteeId},0,1080,-1,
+		#{repayCardNo},#{repayCardBank},#{repayCardBranck},#{repayCardUser},#{guaranteeObject},#{channelCode}
+		,#{realName},#{garantyType})
+		ON DUPLICATE KEY UPDATE
+		city=VALUES(city),
+		e_product=VALUES(e_product),		
+		app_money=VALUES(app_money),
+		ejie_send_time=VALUES(ejie_send_time),
+		repay_way=VALUES(repay_way),
+		rate=VALUES(rate),
+		periods=VALUES(periods),
+		loan_purpose=VALUES(loan_purpose),		
+		a_base_id=VALUES(a_base_id),
+		c_card_number=VALUES(c_card_number),
+		c_card_bank=VALUES(c_card_bank),
+		c_Branch_Bank=VALUES(c_Branch_Bank),
+		c_card_name=VALUES(c_card_name),		
+		guarantee_id=VALUES(guarantee_id),		
+		repay_Card_No=VALUES(repay_Card_No),
+		repay_Card_Bank=VALUES(repay_Card_Bank),
+		repay_Card_Branck=VALUES(repay_Card_Branck),
+		repay_Card_User=VALUES(repay_Card_User),
+		guarantee_object=VALUES(guarantee_object),
+		real_name=VALUES(real_name),
+		garanty_type=VALUES(garanty_type),
+		channelCode=VALUES(channelCode)
+	</insert>
+
+
+	<select id="queryAll" resultType="LoanInfo">
+		SELECT *
+		FROM Loan_Info
+		ORDER BY
+		loan_Id DESC
+		limit #{offset},#{limit}
+	</select>
+
+
+	<!--查询未审核做分页处理 -->
+	<select id="passSearchAll0" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.entity.LoanInfo" resultMap="getLoanMap2">
+		SELECT
+		l.loan_id,l.city,l.app_date,l.e_product,l.repay_way,l.app_money,l.rate,l.periods,
+		l.loan_purpose,l.loan_money,l.a_base_id,l.c_a_info_id,l.guarantee_id,l.loan_date,
+		l.c_card_number,l.c_card_bank,l.c_card_name,l.loan_method,l.status,l.pay_certificate,l.remark,
+		a.a_base_id,a.name,a.id_number,a.nationality,a.sex,a.birthday,a.marital_status,a.mate_info_id,
+		a.education_background,a.career,a.company_address,a.company_name,a.company_dept,a.monthly_income,
+		a.years_working,a.company_number,a.job_title,a.company_property,a.phone_number,
+		a.permanent_address,a.residence_address
+		from
+		loan_info l
+		LEFT JOIN
+		applicant_base a
+		on
+		l.a_base_id=a.a_base_id
+		where
+		`status`=#{status}
+		ORDER
+		BY
+		l.loan_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+
+	</select>
+
+	<!-- resultMap:映射实体类和字段之间的一一对应的关系 -->
+	<resultMap type="LoanInfo" id="getLoanMap2">
+		<id property="loanId" column="loan_id" />
+		<result property="city" column="city" />
+		<result property="appDate" column="app_date" />
+		<result property="eProduct" column="e_product" />
+		<result property="repayWay" column="repay_way" />
+		<result property="appMoney" column="app_money" />
+		<result property="rate" column="rate" />
+		<result property="periods" column="periods" />
+		<result property="loanPurpose" column="loan_purpose" />
+		<result property="loanMoney" column="loan_money" />
+		<result property="aBaseId" column="a_base_id" />
+		<result property="cAInfoId" column="c_a_info_id" />
+		<result property="guaranteeId" column="guarantee_id" />
+		<result property="loanDate" column="loan_date" />
+		<result property="cCardNumber" column="c_card_number" />
+		<result property="cCardBank" column="c_card_bank" />
+		<result property="cCardName" column="c_card_name" />
+		<result property="loanMethod" column="loan_method" />
+		<result property="status" column="status" />
+		<result property="payCertificate" column="pay_certificate" />
+		<result property="remark" column="remark" />
+
+
+		<association javaType="ApplicantBase" property="aBase">
+			<id property="aBaseId" column="a_base_id" />
+			<result property="name" column="name" />
+			<result property="idType" column="id_type" />
+			<result property="idNumber" column="id_number" />
+			<result property="nationality" column="nationality" />
+			<result property="sex" column="sex" />
+			<result property="birthday" column="birthday" />
+			<result property="maritalStatus" column="marital_status" />
+			<result property="mateInfoId" column="mate_info_id" />
+			<result property="educationBackground" column="education_background" />
+			<result property="career" column="career" />
+			<result property="companyAddress" column="company_address" />
+			<result property="companyName" column="company_name" />
+			<result property="companyDept" column="company_dept" />
+			<result property="monthlyIncome" column="monthly_income" />
+			<result property="yearsWorking" column="years_working" />
+			<result property="companyNumber" column="company_number" />
+			<result property="jobTitle" column="job_title" />
+			<result property="companyProperty" column="company_property" />
+			<result property="phoneNumber" column="phone_number" />
+			<result property="permanentAddress" column="permanent_address" />
+			<result property="residenceAddress" column="residence_address" />
+
+		</association>
+	</resultMap>
+
+	<!--授信终审_查询历史记录总条数 -->
+	<select id="outSearchCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		COUNT(*)
+		from
+		loan_info l
+		LEFT JOIN applicant_base a
+		ON
+		l.a_base_id=a.a_base_id
+		where 1=1
+		<if test="eProduct !='' and eProduct !=null">
+			and l.e_product like
+			concat(concat('%','${eProduct}'),'%')
+		</if>
+		<if test="aBaseName !='' and aBaseName !=null">
+			and a.name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="startTime!='' and startTime!=null">
+			and l.app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime!='' and endTime!=null">
+			and l.app_date &lt;= #{endTime}
+		</if>
+		<choose>
+			<when test="status == -1">
+				and l.status &gt; 0
+			</when>
+			<when test="status == -2">
+				and l.status &gt; 2
+			</when>
+			<when test="status == -3">
+				and l.status &gt; 4
+			</when>
+			<otherwise>
+				and l.status=#{status}
+			</otherwise>
+		</choose>
+	</select>
+
+	<!--授信终审_查询历史记录 -->
+	<select id="outSearchAll0" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultMap="getLoanMap">
+		SELECT
+		l.loan_id,l.city,l.app_date,l.e_product,l.repay_way,l.app_money,l.rate,l.periods,
+		l.loan_purpose,l.loan_money,l.a_base_id,l.c_a_info_id,l.guarantee_id,l.loan_date,
+		l.c_card_number,l.c_card_bank,l.c_card_name,l.loan_method,l.status,l.pay_certificate,l.remark,
+		a.a_base_id,a.name,a.id_number,a.nationality,a.sex,a.birthday,a.marital_status,a.mate_info_id,
+		a.education_background,a.career,a.company_address,a.company_name,a.company_dept,a.monthly_income,
+		a.years_working,a.company_number,a.job_title,a.company_property,a.phone_number,
+		a.permanent_address,a.residence_address
+		from
+		loan_info l
+		LEFT JOIN
+		applicant_base a
+		on
+		l.a_base_id=a.a_base_id
+		where 1=1
+		<choose>
+			<when test="eProduct !='' and eProduct !=null">
+				and l.e_product like
+				concat(concat('%','${eProduct}'),'%')
+			</when>
+			<when test="aBaseName !='' and aBaseName !=null">
+				and a.name like
+				concat(concat('%','${aBaseName}'),'%')
+			</when>
+			<when test="startTime!='' and startTime!=null">
+				and l.app_date &gt;= #{startTime}
+			</when>
+			<when test="endTime!='' and endTime!=null">
+				and l.app_date &lt;= #{endTime}
+			</when>
+			<when test="status == -1">
+				and status &gt; 0
+			</when>
+			<when test="status == -2">
+				and status &gt; 2
+			</when>
+			<when test="status == -3">
+				and status &gt; 4
+			</when>
+			<otherwise>
+				and status=#{status}
+			</otherwise>
+		</choose>
+		ORDER BY l.loan_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+
+	<!-- resultMap:映射实体类和字段之间的一一对应的关系 -->
+	<resultMap type="LoanInfo" id="getLoanMap">
+		<id property="loanId" column="loan_id" />
+		<result property="city" column="city" />
+		<result property="appDate" column="app_date" />
+		<result property="eProduct" column="e_product" />
+		<result property="repayWay" column="repay_way" />
+		<result property="appMoney" column="app_money" />
+		<result property="rate" column="rate" />
+		<result property="periods" column="periods" />
+		<result property="loanPurpose" column="loan_purpose" />
+		<result property="loanMoney" column="loan_money" />
+		<result property="aBaseId" column="a_base_id" />
+		<result property="cAInfoId" column="c_a_info_id" />
+		<result property="guaranteeId" column="guarantee_id" />
+		<result property="loanDate" column="loan_date" />
+		<result property="cCardNumber" column="c_card_number" />
+		<result property="cCardBank" column="c_card_bank" />
+		<result property="cCardName" column="c_card_name" />
+		<result property="loanMethod" column="loan_method" />
+		<result property="status" column="status" />
+		<result property="payCertificate" column="pay_certificate" />
+		<result property="remark" column="remark" />
+
+
+		<association javaType="ApplicantBase" property="aBase">
+			<id property="aBaseId" column="a_base_id" />
+			<result property="name" column="name" />
+			<result property="idType" column="id_type" />
+			<result property="idNumber" column="id_number" />
+			<result property="nationality" column="nationality" />
+			<result property="sex" column="sex" />
+			<result property="birthday" column="birthday" />
+			<result property="maritalStatus" column="marital_status" />
+			<result property="mateInfoId" column="mate_info_id" />
+			<result property="educationBackground" column="education_background" />
+			<result property="career" column="career" />
+			<result property="companyAddress" column="company_address" />
+			<result property="companyName" column="company_name" />
+			<result property="companyDept" column="company_dept" />
+			<result property="monthlyIncome" column="monthly_income" />
+			<result property="yearsWorking" column="years_working" />
+			<result property="companyNumber" column="company_number" />
+			<result property="jobTitle" column="job_title" />
+			<result property="companyProperty" column="company_property" />
+			<result property="phoneNumber" column="phone_number" />
+			<result property="permanentAddress" column="permanent_address" />
+			<result property="residenceAddress" column="residence_address" />
+
+		</association>
+	</resultMap>
+
+	<!-- 查询新网提交图片路径 -->
+	<select id="getXwFilePath" resultType="com.ejie.nbrs.entity.FilePathView"
+	parameterType="com.ejie.nbrs.dto.SearchCondition">
+	(
+		SELECT 
+		`file_name` as name,
+		`serialNo` as loanId,
+		`type` as docType
+		FROM
+		scratch_file
+		WHERE
+		serialNo = #{serialNo}
+		AND
+		type in <foreach collection="docArr" index="index" item="item" open="(" separator="," close=")"> #{item, jdbcType=VARCHAR} </foreach>
+	)
+	UNION ALL
+	(
+		SELECT 
+		`name` as name,
+		`bus_no` as loanId,
+		`sub_type` as docType
+		FROM
+		images_info
+		WHERE
+		bus_no = #{serialNo}
+		AND
+		sub_type in <foreach collection="docArr" index="index" item="item" open="(" separator="," close=")"> #{item, jdbcType=VARCHAR} </foreach>
+	)
+	</select>
+
+	<!-- 将视图修改成直接sql查询 -->
+	<select id="getFilePath" resultType="com.ejie.nbrs.entity.FilePathView">
+	SELECT
+		ii.bus_no AS loan_id,
+		#{serviceType} AS service_type,
+		#{docType} AS doc_type,
+		#{doc} AS doc,
+		ii. NAME AS NAME
+	FROM
+		images_info ii
+	
+	WHERE
+		ii.bus_no = #{loanId} AND ii.sub_type in <foreach collection="docArr" index="index" item="item" open="(" separator="," close=")"> #{item, jdbcType=VARCHAR} </foreach>
+
+
+	</select>
+
+	<!--查询附件信息 -->
+	<select id="listSelectAccessoryInfo" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.AccessoryInfo">
+		SELECT
+		root_type,second_type,second_type_name,
+		third_type,third_type_name,type_source
+		FROM
+		accessory_info
+		WHERE
+		1=1
+		<if test="status != null and status != ''">
+			and	type_source = #{status}
+		</if>
+		ORDER BY
+		third_type
+ 		DESC
+	</select>
+
+</mapper>

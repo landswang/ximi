@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ejie.nbrs.dao.IBeanMapperDao">
+	
+		<insert id="insert2" parameterType="com.ejie.nbrs.entity.Images"   useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO `images_info`
+		(
+		`name`,`source`,`bus_no`,`sub_type`)
+		VALUES (#{name},#{source},#{busNo},#{subType});
+	</insert>
+		<insert id="insert1" parameterType="com.ejie.nbrs.entity.FtpDoc">
+		
+      INSERT INTO `ftp_doc`
+		(`id`,
+		`branch_code`,
+		`source`,
+		`bus_no`
+		)
+		VALUES (#{id},
+		#{branchCode},
+		#{source},
+		#{busNo} );
+	</insert>
+	
+	<insert id="insert3" parameterType="com.ejie.nbrs.entity.DeleteFile"  useGeneratedKeys="true" keyProperty="id">
+		
+      INSERT INTO `delete_file`
+		( `file_name`, 
+         `stuts`,`path`) VALUES (
+		#{fileName},
+		#{stuts},#{path});
+	</insert>
+	
+	<resultMap id="BaseResultMap" type="com.ejie.nbrs.entity.DeleteFile" >
+	<id column="id" property="id" jdbcType="INTEGER" />
+    <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+    <result column="stuts" property="stuts" jdbcType="INTEGER" />
+    </resultMap>
+	
+	
+	<select id="selectByStuts" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+	
+		SELECT 
+	id,file_name,stuts,path
+		FROM delete_file
+		WHERE 
+		stuts = #{stuts} 
+	</select>
+	
+
+	<update id="updateByStuts" parameterType="com.ejie.nbrs.entity.DeleteFile" >
+    update delete_file
+    set stuts = #{stuts,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+	
+<delete id="deleteFtpDoc" parameterType="java.util.Map" >
+		    delete from  ftp_doc
+		    where source = #{source,jdbcType=VARCHAR} and 
+		    bus_no = #{busNo,jdbcType=VARCHAR} 
+</delete>
+
+<delete id="deleteImages" parameterType="java.util.Map" >
+		    delete from  images_info
+		    where source = #{source,jdbcType=VARCHAR} and 
+		    bus_no = #{busNo,jdbcType=VARCHAR} 
+</delete>
+	 
+	
+</mapper>

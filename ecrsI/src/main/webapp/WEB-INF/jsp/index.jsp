@@ -1,0 +1,16 @@
+<%@ page language="java" import="java.util.*" pageEncoding="UTF-8"%>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://"
+			+ request.getServerName() + ":" + request.getServerPort()
+			+ path + "/";
+%><!DOCTYPE html><html><head><meta name=renderer content=webkit><meta http-equiv=X-UA-Compatible content="IE=Edge,chrome=1"><meta charset=utf-8><!--[if lte IE8]>
+	<script>
+		if(confirm('你的浏览器版本太低，存在重大安全风险，请升级')){
+
+		}
+	</script>
+	<![endif]--><title>易捷金融</title><link href=<%=path %>/static/css/app.9a6da6bd5da8df0e7737eb5eccbf8d20.css rel=stylesheet></head><body><div id=app></div>
+	<script type=text/javascript src=<%=path %>/static/js/manifest.21573255d771e0ea66f8.js></script>
+	<script type=text/javascript src=<%=path %>/static/js/vendor.e41684f4c3420158ad7a.js></script>
+	<script type=text/javascript src=<%=path %>/static/js/app.c38d32888e21b14b8ab6.js></script></body></html>

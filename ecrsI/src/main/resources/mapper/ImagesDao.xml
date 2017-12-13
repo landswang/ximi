@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.ImagesDao">
+
+	<!--根据流水号，文件类型查询临时文件 -->
+	<select id="selectScratchFile" parameterType="map"
+		resultType="com.ejie.nbrs.entity.ScratchFile">
+		SELECT
+		`id`,
+		`serialNo`,
+		`type`,
+		`file_name`,
+		`date`
+		FROM
+		scratch_file
+		WHERE
+		serialNo = #{serialNo}
+		<if test="type != null and type != ''">
+				and type = #{type}
+		</if>
+	</select>
+
+	<!--添加临时文件 -->
+	<insert id="insertScratchFile" useGeneratedKeys="true"
+		keyProperty="id" parameterType="com.ejie.nbrs.entity.ScratchFile">
+		INSERT INTO
+		scratch_file
+		(`serialNo`,`type`,`file_name`,`date`)
+		VALUES
+		(#{serialno},#{type},#{fileName},#{date})
+	</insert>
+
+	<!--删除临时文件  -->
+	<delete id="deleteScratchFile" parameterType="map">
+		DELETE
+		FROM
+		scratch_file
+		WHERE
+		serialNo = #{serialNo} 
+		<if test="type != null and type != ''">
+		and type = #{type}
+		</if>
+		<if test="fileName != null and fileName != ''">
+				and file_name = #{fileName}
+		</if> 
+	</delete>
+
+</mapper>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.AfterLoanDao">
+
+	<!--查询该贷款编号下的还款详细信息 -->
+	<select id="selectRepayPlan" parameterType="Integer"
+		resultType="com.ejie.nbrs.ejieinterface.entity.RepayPlan">
+		SELECT
+		id,serial_no,loan_id,p_index,repay_date,
+		capital,interest,total,complete_date
+		FROM
+		repay_plan
+		WHERE
+		loan_id=#{loanId}
+	</select>
+
+
+	<!--通过贷款编号查看还款信息 -->
+	<select id="selectRSchedule" parameterType="Integer"
+		resultType="com.ejie.nbrs.ejieinterface.entity.RepaymentSchedule">
+		SELECT
+		loan_id,serial_no,loan_amount,loan_date,
+		repay_limit,repay_method,loan_rate,star_date,last_date,
+		left_capital,all_overdue_days,clear_date
+		FROM
+		repayment_schedule
+		WHERE
+		loan_id=#{loanId}
+	</select>
+
+	<!--查询满足条件的总条数 -->
+	<select id="afterLoanViewCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+			COUNT(1)
+		FROM
+			afterloanview a left JOIN repayment_schedule r ON a.loan_id=r.loan_id
+		where 1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and a.name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="loanId !='' and loanId !=null">
+			and a.loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+		<if test="startTime!='' and startTime!=null">
+			and r.loan_date &gt;= #{startTime}
+		</if>
+		<if test="endTime!='' and endTime!=null">
+			and r.loan_date &lt;= #{endTime}
+		</if>
+		<if test="nodeStatus!='' and nodeStatus!=null">
+			and a.node_status = #{nodeStatus}
+		</if>
+		<if test="flowStatus!='' and flowStatus!=null">
+			and a.flow_status = #{flowStatus}
+		</if>
+	</select>
+
+	<!--根据loanId贷款编号查看贷款详情 -->
+	<select id="afterLoanViewById" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.AfterLoanView">
+		SELECT
+		name, loan_id, e_product,
+		city, loan_money, periods,
+		repay_way, rate, final_transfer_date,
+		id_number, c_card_number,
+		c_card_bank,
+		c_card_name, loan_method, remark
+		from
+		afterloanview
+		where 1=1
+		and
+		loan_id = #{loanId}
+
+	</select>
+
+	<!--根据条件查询贷后管理的结果集 -->
+	<select id="afterLoanViewList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.AfterLoanView">
+		SELECT
+		a.name, a.loan_id, a.e_product,
+		a.city, a.loan_money, a.periods,
+		a.repay_way,
+		a.rate, a.final_transfer_date,
+		a.id_number, a.c_card_number,
+		a.c_card_bank,
+		a.c_card_name, a.loan_method, a.remark
+		FROM
+		afterloanview a left JOIN repayment_schedule r ON a.loan_id=r.loan_id
+		where 1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and a.name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="loanId !='' and loanId !=null">
+			and a.loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+		<if test="startTime!='' and startTime!=null">
+			and r.loan_date &gt;= #{startTime}
+		</if>
+		<if test="endTime!='' and endTime!=null">
+			and r.loan_date &lt;= #{endTime}
+		</if>
+		<if test="nodeStatus!='' and nodeStatus!=null">
+			and a.node_status = #{nodeStatus}
+		</if>
+		<if test="flowStatus!='' and flowStatus!=null">
+			and a.flow_status = #{flowStatus}
+		</if>
+		ORDER BY
+		a.loan_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+
+</mapper>

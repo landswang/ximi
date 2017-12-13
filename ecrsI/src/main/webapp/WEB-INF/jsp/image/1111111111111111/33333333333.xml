@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Root>
+  <Task>
+    <SequenceId>3333333333333333333</SequenceId>
+    <BranchCode>YJJR365</BranchCode>
+    <Source>001</Source>
+    <BussNo>1111111111111111</BussNo>
+    <Documents>
+      <Document>
+        <Subtype>HKB</Subtype>
+        <FilesCount>2</FilesCount>
+        <Files>
+          <File>
+            <Name>111-6.jpg</Name>
+            <FileOrder>1</FileOrder>
+          </File>
+          <File>
+            <Name>111-7.jpg</Name>
+            <FileOrder>2</FileOrder>
+          </File>
+        </Files>
+      </Document>
+      <Document>
+        <Subtype>SFZ</Subtype>
+        <FilesCount>3</FilesCount>
+        <Files>
+          <File>
+            <Name>111-8.jpg</Name>
+            <FileOrder>1</FileOrder>
+          </File>
+          <File>
+            <Name>111-9.jpg</Name>
+            <FileOrder>2</FileOrder>
+          </File>
+          <File>
+            <Name>111-10.jpg</Name>
+            <FileOrder>3</FileOrder>
+          </File>
+        </Files>
+      </Document>
+    </Documents>
+  </Task>
+</Root>

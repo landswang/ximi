@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.RoleInfoDao">
+
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="roleId"  parameterType="com.ejie.nbrs.entity.RoleInfo">
+		insert into
+		role_info(role_name,role_comment)
+		values
+		(#{roleName},#{roleComment});
+	</insert>
+	
+	<update id="modifyRole" parameterType="com.ejie.nbrs.entity.RoleInfo">
+        UPDATE
+        	role_info
+        SET 
+        	role_name=#{roleName},role_comment=#{roleComment}
+        WHERE 
+        	role_id=#{roleId} 
+		     
+    </update>
+    
+    <update id="modifyRByUser" parameterType="com.ejie.nbrs.entity.RoleInfo">
+        UPDATE
+         role_info
+          SET role_name=#{roleName},role_comment=#{roleComment}
+        WHERE
+          user_id=#{userId}
+    </update>
+
+	<select id="selectByRoleName" resultType="com.ejie.nbrs.entity.RoleInfo">
+		SELECT
+		role_id,role_name,role_comment
+		FROM
+		role_info
+		where
+		role_name=#{roleNAme};
+	</select>
+
+	<select id="selectAll" resultType="com.ejie.nbrs.entity.RoleInfo">
+		SELECT
+		role_id,role_name,role_comment
+		FROM
+		role_info
+	</select>
+
+	<select id="distincRoleName" resultType="com.ejie.nbrs.entity.RoleInfo">
+		SELECT
+		role_id,role_name,role_comment
+		FROM
+		role_info
+		where
+		role_name != ""
+	  GROUP BY role_name
+	  order by role_id
+	</select>
+
+
+</mapper>

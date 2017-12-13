@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.AccountDao">
+
+
+	<select id="queryByUName" resultType="com.ejie.nbrs.entity.Account">
+		SELECT
+		account_name,
+		user_id,
+		user_name,
+		role_id,
+		`password`,
+		`status`,
+		status_remark,
+		user_type
+		FROM
+		account
+		WHERE
+		account_name= #{userName}
+	</select>
+
+
+	<!--当第一次新增数据的时候，返回该对象在数据库对应id -->
+	<insert id="insertUser" useGeneratedKeys="true" keyProperty="userId"
+		parameterType="com.ejie.nbrs.entity.Account">
+		insert into
+		account(account_name,user_name,password,role_id)
+		values
+		(#{accountName},#{userName},#{password},#{roleId});
+	</insert>
+
+	<select id="selectByUId" resultType="com.ejie.nbrs.entity.Account">
+
+		SELECT
+		user_id,account_name,user_name,password,email,phone_number,user_type,status,apikey,role_id
+		FROM account
+		WHERE
+		user_id = #{userId}
+	</select>
+
+	<!-- resultMap:映射实体类和字段之间的一一对应的关系 -->
+	<resultMap type="Account" id="getAccountMap">
+		<id column="user_id" property="userId" />
+		<result column="user_name" property="userName" />
+		<result column="account_name" property="accountName" />
+		<result column="password" property="password" />
+		<result column="email" property="email" />
+		<result column="phone_number" property="phoneNumber" />
+		<result column="user_type" property="userType" />
+		<result column="status" property="status" />
+		<result column="apikey" property="apikey" />
+		<result column="status_remark" property="statusRemark" />
+		<association javaType="RoleInfo" property="roleInfo">
+			<id property="roleId" column="role_id" />
+			<result property="roleName" column="role_name" />
+			<result property="userId" column="user_id" />
+			<result property="roleComment" column="role_comment" />
+		</association>
+	</resultMap>
+
+	<select id="selectAll" resultType="com.ejie.nbrs.entity.Account">
+		SELECT
+		user_id,account_name,user_name,password,email,phone_number,user_type,status,apikeyrole_id
+		FROM account;
+	</select>
+
+	<update id="modifyAccount" parameterType="com.ejie.nbrs.entity.Account">
+		UPDATE
+		account
+		SET
+		status=#{status},status_remark=#{statusRemark},user_name=#{userName},role_id=#{roleId}
+		WHERE
+		user_id=#{userId}
+	</update>
+
+
+	<update id="resetpwd" parameterType="com.ejie.nbrs.entity.Account">
+		UPDATE
+		account
+		SET password=#{password}
+		WHERE
+		user_id=#{userId}
+	</update>
+
+</mapper>

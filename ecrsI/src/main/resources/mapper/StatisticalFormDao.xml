@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.StatisticalFormDao">
+
+	<!--通过时间调用存储过程loanPro -->
+	<select id="searchStatisticalForm" parameterType="Map"
+		statementType="CALLABLE" resultType="com.ejie.nbrs.entity.StatisticalForm">
+		{call loanPro(
+		#{starttime,jdbcType=VARCHAR},
+		#{endtime,jdbcType=VARCHAR},
+		#{type1,jdbcType=VARCHAR}
+		)}
+	</select>
+
+	
+		<!--通过时间调用存储过程 lendingStatisticsPro-->
+	<select id="searchLendingForm" parameterType="Map"
+		statementType="CALLABLE" resultType="com.ejie.nbrs.entity.LendingForm">
+		{call lendingStatisticsPro(
+		#{starttime,jdbcType=VARCHAR},
+		#{endtime,jdbcType=VARCHAR}
+		)}
+	</select>
+	
+	<!--进件统计查询,调用存储过程 advance_piece_pro -->
+	<select id="searchInAStatistical" parameterType="Map"
+		statementType="CALLABLE" resultType="com.ejie.nbrs.entity.InAStatisticalEntity">
+		{call into_a_statistical_pro(
+		#{starttime,jdbcType=VARCHAR},
+		#{endtime,jdbcType=VARCHAR},
+		#{lending_channel,jdbcType=VARCHAR},
+		#{city1,jdbcType=VARCHAR},
+		#{loan_purpose1,jdbcType=VARCHAR}
+		)}
+	</select>
+	
+	<!--查询档案详细信息集合 -->
+	<select id="showLoanViewList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="String">
+		SELECT 
+		serialNo
+		FROM
+		newLoanView
+		where
+		1=1
+		<if test="startTime != null and startTime != ''">
+			and app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and app_date &lt;= #{endTime}
+		</if>
+		<if test="loanVoucher != null and loanVoucher != ''">
+			and channelCode = #{loanVoucher}
+		</if>
+		ORDER BY 
+		app_date
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+	
+		<!--查询满足条件个数-->
+	<select id="SearchCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT 
+		count(1)
+		FROM
+		newLoanView
+		where
+		1=1
+		<if test="startTime != null and startTime != ''">
+			and app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and app_date &lt;= #{endTime}
+		</if>
+		<if test="loanVoucher != null and loanVoucher != ''">
+			and channelCode = #{loanVoucher}
+		</if>
+
+	</select>
+
+	<!--查询台账报表list -->
+	<select id="searchTzFormViewlist" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.entity.TzFormView">
+		SELECT 
+		serialNo,loan_id,mhouse_id,name,city,channelCode,id_number,
+		app_money,periods,repay_way,app_date
+		FROM
+		tz_form_view
+		where
+		1=1
+		<if test="startTime != null and startTime != ''">
+			and app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and app_date &lt;= #{endTime}
+		</if>
+		<if test="loanVoucher != null and loanVoucher != ''">
+			and channelCode = #{loanVoucher}
+		</if>
+		ORDER BY 
+		app_date
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+	
+	<!--查询台账报表count -->
+	<select id="searchTzFormViewCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT 
+		count(*)
+		FROM
+		tz_form_view
+		where
+		1=1
+		<if test="startTime != null and startTime != ''">
+			and app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime != null and endTime != ''">
+			and app_date &lt;= #{endTime}
+		</if>
+		<if test="loanVoucher != null and loanVoucher != ''">
+			and channelCode = #{loanVoucher}
+		</if>
+	</select>
+	
+</mapper>
