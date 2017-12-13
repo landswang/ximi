@@ -1,0 +1,780 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.LoanInfoDao">
+
+	<!--查询抵押物价值 -->
+	<select id="selectGuaranteeValuebyGuaranteeId" parameterType="String"
+		resultType="com.ejie.nbrs.entity.GuaranteeValue">
+		SELECT
+		gua_v_id,old_value,ejie_comfirm_value,wu_comfirm_value,nb_comfirm_value
+		as nbComfirmValue,
+		wu_rate as wuRate,nb_c_rate as nbCRate,
+		comfirm_date,g_status,g_rate,guarantee_id,serialNo
+		FROM
+		guarantee_value
+		WHERE
+		serialNo=#{guaranteeId}
+	</select>
+
+	<!--根据配偶id查询配偶信息 -->
+	<select id="selectMateInfo" parameterType="Integer"
+		resultType="com.ejie.nbrs.entity.MateInfo">
+		SELECT
+		mate_info_id,mate_name,mate_id_number,mate_phone_number,
+		mate_education_background,mate_permanent_address,mate_residence_address,
+		mate_age,mate_gender
+		FROM
+		mate_info
+		WHERE
+		mate_info_id=#{mateInfoId}
+	</select>
+
+	<!--根据贷款编号查看贷款信息 -->
+	<select id="selectLoanInfoByLoanId" parameterType="Integer"
+		resultType="com.ejie.nbrs.entity.LoanInfo">
+		SELECT
+		loan_id, city, app_date, e_product, repay_way,
+		app_money, rate,
+		periods,
+		loan_purpose,
+		loan_money, a_base_id,
+		c_a_info_id, c_card_number,
+		c_card_bank, c_card_name,
+		loan_method,
+		status, pay_certificate,
+		loan_date, grant_credit_date, give_moeny_date,
+		final_transfer_date,
+		remark, guarantee_object, grant_autid_user,
+		give_moeny_user,
+		final_transfer_user,
+		serialNo,
+		(select guarantee_id from guarantee where loan_id=#{loanId}) AS guarantee_id,node_status,flow_status
+		FROM
+		loan_info
+		where
+		loan_id=#{loanId}
+
+	</select>
+
+	<!-- 添加放款信息 -->
+	<insert id="insertGrantMoney"  parameterType="com.ejie.nbrs.entity.LoanInfo">
+		insert into
+		grant_money
+		(real_loan_money,
+		loan_method, loan_date, loan_image,
+		repayment_method,repayment_limit,repayment_card_number,
+		repayment_bank, cardholder, remark, loan_id)
+		values
+		(#{loanMoney},#{loanMethod},#{loanDate},#{payCertificate},
+		#{repayWay},#{periods},#{cCardNumber},
+		#{cCardBank},#{cCardName},#{remark},#{loanId})
+
+		ON DUPLICATE KEY UPDATE
+		real_loan_money=values(real_loan_money),
+		loan_method=values(loan_method),
+		loan_date=values(loan_date),
+		loan_image=values(loan_image),
+		repayment_method=values(repayment_method),
+		repayment_limit=values(repayment_limit),
+		repayment_card_number=values(repayment_card_number),
+		repayment_bank=values(repayment_bank),
+		cardholder=values(cardholder),
+		remark=values(remark),
+		loan_id=values(loan_id)
+	</insert>
+
+	<!--查看该贷款编号下关联的押品权证信息 -->
+	<select id="showWarrantByLoanId" resultType="com.ejie.nbrs.dto.NewLoanView"
+		parameterType="com.ejie.nbrs.dto.SearchCondition">
+		SELECT
+		name, id_number, sex,
+		nationality, birthday,
+		phone_number,
+		education_background, marital_status, career,
+		permanent_address, residence_address, company_address,
+		company_name,
+		company_dept, company_property,
+		company_number, years_working,
+		monthly_income,
+		job_title, app_date, e_product,
+		repay_way, app_money,
+		repayCardNo ,
+		repayCardBank ,
+		repayCardBranck ,
+		repayCardUser ,
+		rate,
+		periods, loan_purpose, bankcardno as cCardNumber,
+		cardholder as
+		cCardName,
+		bankname as cCardBank,
+		branchbank as branchbank,
+		a_base_id,
+		mhouse_id, mcar_id,
+		loan_id,
+		guarantee_id,
+		final_transfer_date, serialNo,
+		mate_info_id
+		from
+		newloanview
+		where
+		loan_id
+		= #{loanId}
+	</select>
+
+	<!--根据贷款编号编号查询 查询放款信息 -->
+	<select id="selectGrantMoneyByLoanId" resultType="com.ejie.nbrs.entity.GrantMoney"
+		parameterType="String">
+		SELECT
+		id, real_loan_money, loan_method,
+		loan_date,
+		loan_image, repayment_method,
+		repayment_limit, repayment_card_number,
+		repayment_bank,
+		cardholder, remark,loan_id
+		from
+		grant_money
+		WHERE
+		loan_id=#{loanId}
+	</select>
+
+	<!--根据共借人编号查询共借人信息 -->
+	<select id="selectCommonApplicantByCAInfoId" resultType="com.ejie.nbrs.entity.CommonApplicant"
+		parameterType="Integer">
+		SELECT
+		c_a_info_id, c_a_type, c_a_name, c_a_relationship,
+		c_a_age, c_a_id_number, c_a_phone_number,
+		c_a_residence_address,
+		c_a_ID_address, c_a_reason, c_a_birthday, c_a_cardno, c_a_bankname,
+		c_a_bank, c_a_cardOwner, c_a_ownerID, a_base_id
+		from
+		common_applicant
+		WHERE
+		a_base_id=#{cAInfoId}
+	</select> 
+
+	<!--根据抵押物中抵押房编号查询 -->
+	<select id="selectMortgageHouseListByMhouseId" resultType="com.ejie.nbrs.entity.MortgageHouse"
+		parameterType="String">
+		SELECT
+		m_h_id, mhouse_id, g_category,
+		mhouse_value,house_type,
+		property_right_number, property_owner,
+		acreage, g_address, and_status,
+		house_area, land_certificate,
+		get_method,
+		warrant_id,nb_comfirm_value
+		as nbComfirmValue,wuhouse_value
+		as wuhouseValue,
+		status,mortgager_tel,c_number
+		FROM
+		mortgage_house
+		WHERE
+		mhouse_id=#{mhouseId}
+	</select>
+
+	<!--根据抵押物中抵押车编号查询 -->
+	<select id="selectMortgageCarListByMcarId" resultType="com.ejie.nbrs.entity.MortgageCar"
+		parameterType="String">
+		SELECT
+		m_c_id, mcar_id, mcar_brand,
+		mcar_version,
+		license_plate_number, mcar_vin,
+		mcar_engine_number, mcar_buy_date,
+		mcar_buy_price,mcar_value
+		status, warrant_id
+		FROM
+		mortgage_car
+		WHERE
+		mcar_id=#{mcarId}
+	</select>
+
+	<!--根据贷款编号查询抵押物信息 -->
+	<!-- <select id="selectGuaranteeByGuaranteeId" resultType="com.ejie.nbrs.entity.Guarantee" 
+		parameterType="String"> SELECT g.id,g.guarantee_id,g.loan_id,g.mhouse_id,g.mcar_id 
+		from guarantee g where g.guarantee_id = #{guaranteeId} </select> -->
+
+
+	<!--查询所有产品类型 -->
+	<select id="searchAllProduct" resultType="com.ejie.nbrs.entity.LoanInfo">
+		SELECT DISTINCT
+		e_product FROM loan_info
+	</select>
+
+	<!--授信审核状态修改 -->
+	<update id="alterStatus" parameterType="com.ejie.nbrs.dto.SearchCondition">
+		UPDATE
+		loan_info
+		SET
+		node_status=#{nodeStatus}
+		,flow_status=#{flowStatus}
+		<if test="outRemark !='' and outRemark !=null">
+			,remark=#{outRemark}
+		</if>
+		where
+		loan_id=#{loanId}
+	</update>
+
+	<!--授信审核、放款确认状态修改。成功-否 -->
+	<update id="alterLoanView" parameterType="com.ejie.nbrs.dto.SearchCondition">
+		UPDATE
+		loan_info l
+		JOIN
+		grant_money g
+		ON
+		g.loan_id=l.loan_id
+		SET
+		l.node_status=#{nodeStatus}
+		,l.flow_status=#{flowStatus}
+		<if test="eProduct !='' and eProduct !=null">
+			,g.loan_method=#{eProduct}
+		</if>
+		<if test="startTime !='' and startTime !=null">
+			,g.loan_date=#{startTime}
+		</if>
+		<if test="loanVoucher !='' and loanVoucher !=null">
+			,g.loan_image=#{loanVoucher}
+		</if>
+		<if test="outRemark !='' and outRemark !=null">
+			,g.remark=#{outRemark}
+		</if>
+		where
+		l.loan_id =#{loanId}
+	</update>
+
+	<!--查询档案详细信息 -->
+	<select id="showLoanView" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.NewLoanView">
+		SELECT serialNo,guarantee_object,city,
+		guarantee_id,loan_id,name, id_number, age,sex,
+		nationality, birthday,
+		phone_number,
+		education_background,
+		marital_status, career,
+		permanent_address,
+		residence_address,
+		company_address,
+		company_name,
+		company_dept,
+		company_property,
+		company_number, years_working,
+		monthly_income,
+		job_title, app_date,
+		e_product,
+		repay_way, app_money,
+		rate,
+		periods,
+		loan_purpose,
+		bankcardno as cCardNumber,
+		cardholder as
+		cCardName,
+		bankname as cCardBank,
+		branchbank as branchbank,
+		repayCardNo ,
+		repayCardBank ,
+		repayCardBranck ,
+		repayCardUser ,
+		mate_info_id,
+		channelCode,
+		a_base_id,mhouse_id,mcar_id,final_transfer_date
+		FROM
+		newloanview
+		where
+		1=1
+		and serialNo=#{serialNo}
+	</select>
+	
+	<!--通用查询条件sql 用于公用拼接  -->
+	<sql id="base_condition">
+		<if test="aBaseName != '' and aBaseName != null">
+			and name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="channelCode != '' and channelCode != null">
+		<choose>
+		<when test="channelCode != -1">
+			and channelCode = #{channelCode}
+		</when>
+		<!--'进件渠道代码：1804 新网 1802：外贸信托 1807 ： 四川信托';  -->
+		</choose>
+		</if>
+		<if test="eProduct != '' and eProduct != null">
+			and e_product like
+			concat(concat('%','${eProduct}'),'%')
+		</if>
+		<if test="startTime != '' and startTime != null">
+			and receive_time &gt;= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			and receive_time &lt;= #{endTime}
+		</if>
+	</sql>
+	<!--贷款审批通用查询结果集 -->
+	<select id="loanConmmonList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.LoaninfoIndex">
+		SELECT
+		loan_id,app_date,e_product,city,status,
+		name,id_number,app_money,rate,repay_way,
+		ejie_comfirm_value,g_rate,give_moeny_date,grant_credit_date,
+		final_transfer_date,serialNo,flow_status,node_status
+		,nb_comfirm_value,nb_c_rate,channelCode,receive_time
+		from
+		loaninfoentity
+		where 1=1
+		<include refid="base_condition" />
+		<if test="nodeStatus != '' and nodeStatus != null">
+			<choose>
+				<when test="nodeStatus == 1001 or nodeStatus == 1002">
+					<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+					<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+						<choose>
+							<when test="flowStatus == 0">
+								and (flow_status = 0 or flow_status= 3)
+							</when>
+							<otherwise>
+								and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+								or (node_status = 1081 and flow_status = -1)
+								)
+							</otherwise>
+						</choose>
+					</if>
+					<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+					<if test="status != ''  and status != null">
+						<choose>
+							<when test="status == 1">
+								and flow_status = 1 
+							</when>
+							<when test="status == 2">
+								and flow_status = 2
+							</when>
+							<when test="status == 3">
+								and flow_status = 3
+							</when>	
+							<otherwise>
+								and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+								or (node_status = 1081 and flow_status = -1)
+								)
+							</otherwise>
+						</choose>
+					</if>	
+				</when>
+				<otherwise>
+						<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+						<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+							<choose>
+								<when test="flowStatus == 0">
+									and (flow_status = 0 or flow_status= 3)
+								</when>
+								<otherwise>
+									and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+									)
+								</otherwise>
+							</choose>
+						</if>
+						<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+						<if test="status != ''  and status != null">
+							<choose>
+								<when test="status == 1">
+									and (flow_status = 1)
+								</when>
+								<when test="status == 2">
+									and flow_status = 2
+								</when>
+								<when test="status == 3">
+									and flow_status = 3
+								</when>	
+								<otherwise>
+								and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+								)
+								</otherwise>
+							</choose>
+						</if>	
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="loanId != null and loanId != ''">
+					and node_status &gt;= #{nodeStatus}
+					and node_status &lt; 2000
+				</when>
+				<otherwise>
+					and node_status = #{nodeStatus}
+					or (
+					node_status = (#{nodeStatus}-1) and flow_status = 1
+					<include refid="base_condition" />
+					) 
+				</otherwise>
+			</choose>
+		</if>
+		
+		ORDER BY loan_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+
+	<!--贷款审批通用查询结果条数 -->
+	<select id="loanConmmonCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		count(*)
+		from
+		loaninfoentity
+		where 1=1
+		<include refid="base_condition" />
+		<if test="nodeStatus != '' and nodeStatus != null">
+			<choose>
+				<when test="nodeStatus == 1001 or nodeStatus == 1002">
+					<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+					<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+						<choose>
+							<when test="flowStatus == 0">
+								and (flow_status = 0 or flow_status= 3)
+							</when>
+							<otherwise>
+								and (								
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+								or (node_status = 1081 and flow_status = -1)
+								)
+							</otherwise>
+						</choose>
+					</if>
+					<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+					<if test="status != ''  and status != null">
+						<choose>
+							<when test="status == 1">
+								and flow_status = 1 
+							</when>
+							<when test="status == 2">
+								and flow_status = 2
+							</when>
+							<when test="status == 3">
+								and flow_status = 3
+							</when>	
+							<otherwise>
+								and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+								or (node_status = 1081 and flow_status = -1)
+								)
+							</otherwise>
+						</choose>
+					</if>	
+				</when>
+				<otherwise>
+						<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+						<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+							<choose>
+								<when test="flowStatus == 0">
+									and (flow_status = 0 or flow_status= 3)
+								</when>
+								<otherwise>
+									and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+									)
+								</otherwise>
+							</choose>
+						</if>
+						<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+						<if test="status != ''  and status != null">
+							<choose>
+								<when test="status == 1">
+									and flow_status = 1
+								</when>
+								<when test="status == 2">
+									and flow_status = 2
+								</when>
+								<when test="status == 3">
+									and flow_status = 3
+								</when>	
+								<otherwise>
+									and (
+								(node_status != #{nodeStatus} and flow_status = 0)
+								 or flow_status = 1 or flow_status = 2 
+								 or (node_status != #{nodeStatus} and flow_status = 3)
+									)
+								</otherwise>
+							</choose>
+						</if>	
+				</otherwise>
+			</choose>
+			<choose>
+				<when test="loanId != null and loanId != ''">
+					and node_status &gt;= #{nodeStatus}
+					and node_status &lt; 2000
+				</when>
+				<otherwise>
+					and node_status = #{nodeStatus}
+					or (
+					node_status = (#{nodeStatus}-1) and flow_status = 1
+					<include refid="base_condition" />) 
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+
+	<!--增加订单审核记录表信息 -->
+	<insert id="insertLoanAudit" useGeneratedKeys="true"
+		keyProperty="id" parameterType="com.ejie.nbrs.entity.LoanAudit">
+		INSERT
+		INTO
+		loan_audit(
+		user_id,loan_id,serialNo,old_flow_node,flow_node,old_status,`status`,
+		conent,accessory_img,remark)
+		VALUES
+		(#{userId},#{loanId},#{serialNo},#{oldFlowNode},#{flowNode},#{oldStatus},#{status},
+		#{conent},#{accessoryImg},#{remark})
+	</insert>
+
+	<!--根据传入抵押房修改抵押房我行评估价值 -->
+	<update id="alterNbComfirmValue" parameterType="com.ejie.nbrs.entity.MortgageHouse">
+		UPDATE
+		mortgage_house
+		SET
+		nb_comfirm_value=#{nbComfirmValue}
+		WHERE
+		m_h_id=#{mHId}
+	</update>
+
+	<!--根据业务流水号，修改我行平率总额、我行抵押率 -->
+	<update id="alterNbAll" parameterType="com.ejie.nbrs.entity.GuaranteeValue">
+		UPDATE
+		guarantee_value
+		SET
+		nb_comfirm_value=#{nbComfirmValue},
+		nb_c_rate=#{nbCRate}
+		WHERE
+		serialNo=#{serialNo}
+	</update>
+
+	<!--查看某贷款编号下最近一次操作日志信息，主要是为了获取最近一次操作时间 -->
+	<select id="selectLoanAudit" parameterType="map"
+		resultType="com.ejie.nbrs.entity.LoanAudit">
+		SELECT id,user_id,loan_id,serialNo,flow_node,
+		`status`,conent,accessory_img,remark,auditing_time
+		FROM loan_audit
+		WHERE 
+		1=1
+		and flow_node= #{nodeStatus,jdbcType=VARCHAR}
+<!-- 		<choose>
+			<when test="flag == 1 ">
+
+			</when>
+			<otherwise>
+			    and (flow_node = #{nodeStatus} 
+			    and (status = 0 or status= 3 )
+			    or (flow_node = (#{nodeStatus}-1) and status = 1))
+			</otherwise>
+		</choose> -->
+		<if test="status != null or 0 == status and status != ''">
+		<choose>
+			<when test="0 == status">
+				and `status` = 0
+			</when>
+			<otherwise>
+				and `status` = #{status}
+			</otherwise>
+		</choose>
+		</if>
+		and loan_id = #{loanId}
+		ORDER BY auditing_time
+		DESC
+		LIMIT 1
+	</select>
+
+	<!--通过贷款编号查看审核记录信息 -->
+	<select id="selectLogList" parameterType="Integer"
+		resultType="com.ejie.nbrs.dto.LogView">
+		SELECT
+		id,user_id,loan_id,serialNo,old_flow_node,flow_node,
+		old_status,`status`,conent,accessory_img,remark,auditing_time,
+		privilege_name
+		as
+		nodeName,account_name,user_name
+		FROM
+		log_view
+		WHERE
+		flow_node &gt;= 1001
+		AND
+		flow_node &lt; 2000
+		AND loan_id=#{loanId}
+		ORDER BY auditing_time
+	</select>
+	
+		<!--通用查询条件sql 用于公用拼接  -->
+	<sql id="base_fc">
+			<if test="aBaseName != '' and aBaseName != null">
+			and real_Name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="eProduct != '' and eProduct != null">
+			and e_product like
+			concat(concat('%','${eProduct}'),'%')
+		</if>
+		<if test="outReason != '' and outReason != null">
+			<choose>
+			<when test="outReason == 1">
+			and (node_status = 1080
+			or node_status = 1001
+			or node_status = 1002)
+			</when>
+			<when test="outReason == 2">
+			and (node_status &gt;= 1003
+			and node_status &lt;= 1006
+			)
+			</when>
+			<when test="outReason == 3">
+			and node_status = 1081
+			</when>
+			<otherwise>
+			</otherwise>
+			</choose>
+		</if>
+		<if test="channelCode != '' and channelCode != null">
+		<choose>
+		<when test="channelCode != -1">
+			and channelCode = #{channelCode}
+		</when>
+		<!--'进件渠道代码：1804 新网 1802：外贸信托 1807 ： 四川信托';  -->
+		</choose>
+		</if>
+		<if test="startTime != '' and startTime != null">
+			and app_date &gt;= #{startTime}
+		</if>
+		<if test="endTime != '' and endTime != null">
+			and app_date &lt;= #{endTime}
+		</if>
+	</sql>
+	
+	<!--金融专员查询结果集 -->
+	<select id="fcList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.LoaninfoIndex">
+		SELECT
+		serialNo as serialNo,
+		loan_Id as loan_id,
+		app_date as app_date,
+		e_product as e_product,
+		city as    city,
+		flow_status as flow_status,
+		real_Name as NAME  ,
+		app_money as app_money,
+		rate as rate,
+		node_status,
+		channelCode,
+		repay_way as repay_way
+		from
+		loan_info
+		where 1=1
+		<include refid="base_fc" />
+		<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+		<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+			<choose>
+				<when test="flowStatus == 10">
+					and (flow_status = -1 or flow_status = 3)
+				</when>
+				<when test="flowStatus == 11">
+					and (flow_status = 0 or (flow_status = 1 and
+					node_status != 1006))
+				</when>
+				<when test="flowStatus == 12">
+					and (flow_status = 2 or (flow_status = 1 and
+					node_status = 1006))
+				</when>
+				<otherwise>
+					and (flow_status = -1 or flow_status = 3)
+				</otherwise>
+			</choose>
+		</if>
+		and node_status &lt; 2000
+		and node_status &gt; 1000
+		<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+		<if test="status != '' and status != null">
+			<choose>
+				<when test="status == 1">
+					and (flow_status = 1 and node_status = 1006)
+				</when>
+				<when test="status == 2">
+					and flow_status = 2
+				</when>
+				<otherwise>
+					and (flow_status = 2 or (flow_status = 1 and
+					node_status = 1006))
+				</otherwise>
+			</choose>
+		</if>
+		ORDER BY loan_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+
+	<!--金融专员查询结果条数 -->
+	<select id="fcCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		count(*)
+		from
+		loan_info
+		where 1=1
+		<include refid="base_fc" />
+		<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+		<if test="flowStatus != ''  or 0 == flowStatus and flowStatus != null">
+			<choose>
+				<when test="flowStatus == 10">
+					and (flow_status = -1 or flow_status = 3)
+				</when>
+				<when test="flowStatus == 11">
+					and (flow_status = 0 or (flow_status = 1 and
+					node_status != 1006))
+				</when>
+				<when test="flowStatus == 12">
+					and (flow_status = 2 or (flow_status = 1 and
+					node_status = 1006))
+				</when>
+				<otherwise>
+					and (flow_status = -1 or flow_status = 3)
+				</otherwise>
+			</choose>
+		</if>
+		and node_status &lt; 2000
+		and node_status &gt; 1000
+		<!--mybatis 中choose when判断是否为0，必须这样写，否则0会被mybatis当作null处理 -->
+		<if test="status != '' and status != null">
+			<choose>
+				<when test="status == 1">
+					and (flow_status = 1 and node_status = 1006)
+				</when>
+				<when test="status == 2">
+					and flow_status = 2
+				</when>
+				<otherwise>
+					and (flow_status = 2 or (flow_status = 1 and
+					node_status = 1006))
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<!--修改订单接收时间  -->
+	<update id="alterReceiveTime" parameterType="map">
+		UPDATE
+		loan_info
+		SET
+		receive_time = #{receiveTime}
+		WHERE
+		serialNo = #{serialNo}
+	</update>
+</mapper>

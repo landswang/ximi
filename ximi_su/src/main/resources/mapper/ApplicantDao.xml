@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.ApplicantDao">
+ <!--   还款计划表中 修改已清贷的订单节点码为1099 提高效率 -->
+<update id="alterNodeStatus" parameterType="java.util.Map" >
+		UPDATE
+		loan_info 
+		SET
+		node_status=#{nodeStatus,jdbcType=INTEGER}
+		where
+		loan_id =#{loanId,jdbcType=INTEGER}
+	</update>
+
+
+	<!-- 添加还款计划 -->
+	<insert id="saverSchedule"
+		parameterType="com.ejie.nbrs.ejieinterface.entity.RepaymentSchedule">
+		INSERT INTO `repayment_schedule`
+		(`loan_id`,
+		`serial_no`,
+		`loan_amount`,
+		`loan_date`,
+		`repay_limit`,
+		`repay_method`,
+		`loan_rate`,
+		`star_date`,
+		`last_date`,
+		`left_capital`,
+		`all_overdue_days`,
+		`clear_date`,
+		`acquire_date`
+		)
+		VALUES (#{loanId},
+		#{serialNo},
+		#{loanAmount},
+		#{loanDate},
+		#{repayLimit},
+		#{repayMethod},
+		#{loanRate},
+		#{startDate},
+		#{lastDate},
+		#{leftCapital},
+		#{allOverdueDays},
+		#{clearDate},
+		#{acquireDate}
+		)
+		ON DUPLICATE KEY UPDATE
+		loan_id=VALUES(loan_id),
+		serial_no=VALUES(serial_no ),
+		loan_amount=VALUES(loan_amount),
+		loan_date=VALUES(loan_date),
+		repay_limit =VALUES(repay_limit),
+		repay_method =VALUES(repay_method),
+		loan_rate =VALUES(loan_rate ),
+		star_date =VALUES(star_date ),
+		last_date =VALUES(last_date ),
+		left_capital =VALUES(left_capital ),
+		all_overdue_days=VALUES(all_overdue_days),
+		clear_date=VALUES(clear_date),
+		acquire_date=VALUES(acquire_date)
+	</insert>
+<!-- 还款计划详情 -->
+	<insert id="saveRepayPlan" 
+		parameterType="java.util.List">
+		INSERT INTO `repay_plan`
+		(
+		`serial_no`,
+		`loan_id`,
+		`p_index`,
+		`repay_date`,
+		`capital`,
+		`interest`,
+		`total`,
+		`complete_date`)
+		VALUES
+		<foreach collection="list" item="item" 
+			separator=",">
+
+			(#{item.serialNo},
+			#{item.loanId},
+			#{item.index},
+			#{item.repaydate},
+			#{item.capital},
+			#{item.interest},
+			#{item.total},
+			#{item.completeDate})
+		</foreach>
+		ON DUPLICATE KEY UPDATE
+		serial_no=values(serial_no),
+		loan_id=values(loan_id),
+		p_index=values(p_index),
+		repay_date=values(repay_date),
+		capital=values(capital),
+		interest=values(interest),
+		total=values(total),
+		complete_date=values(complete_date)
+
+
+	</insert>
+
+
+
+
+
+	<resultMap id="BaseResultMap" type="com.ejie.nbrs.entity.LoanInfo">
+		<id column="loan_Id" property="loanId" jdbcType="INTEGER" />
+		<result column="serialNo" property="serialNo" jdbcType="VARCHAR" />
+		<result column="status" property="status" jdbcType="INTEGER" />
+	</resultMap>
+
+	<select id="selectLoanInfoStatus" resultMap="BaseResultMap"
+		parameterType="java.util.Map" >
+		SELECT loan_Id,serialNo
+		FROM Loan_Info
+		where  node_status=#{nodeStatus,jdbcType=INTEGER}
+		 and flow_status=#{flowStatus,jdbcType=INTEGER}
+	</select>
+
+	<select id="queryLoanIdBySerialNo" resultType="Integer">
+		SELECT loan_Id
+		FROM Loan_Info
+		where serialNo = #{serialNo}
+	</select>
+
+	<delete id="deleteBySerialNo" parameterType="java.lang.String">
+		delete from
+		applicant_base where serialNo = #{serialNo}
+
+	</delete>
+
+
+	<!--添加主借人 -->
+	<insert id="insertApplicant" useGeneratedKeys="true"
+		keyProperty="appBaseId" parameterType="com.ejie.nbrs.ejieinterface.entity.MasterInfo">
+		replace into applicant_base
+		(name,sex,id_number,birthday, serialNo,
+		marital_status,career,permanent_address,residence_address,
+		company_name,company_address,job_title,
+		id_type,education_background,phone_number,company_dept,monthly_income,
+		years_working,mate_info_id,company_number,bankcardno,bankname,branchBank,cardName,age)
+
+		values (#{realName},#{gender},#{idNo},#{birthday},#{serialNo},
+		#{maritalStatus},#{jobStyle},#{liveAddress},#{domicileAddress},
+		#{unitName},#{unitAddress},#{dute},
+		#{documentType},#{education},#{telePhone},#{workDept},#{salary},
+		#{workYear},#{mateInfo},#{unitTel},#{bankNumber},#{bankName},
+		#{bankBranch},#{bankUser},#{age})
+	</insert>
+
+	<!--添加共借人 -->
+	<insert id="insertCommonApplicant" useGeneratedKeys="true"
+		keyProperty="commonInfoId" parameterType="com.ejie.nbrs.ejieinterface.entity.ECommonCustomer">
+		replace into common_applicant
+		(`c_a_type`,c_a_relationship,`c_a_reason`,c_a_name,c_a_age,c_a_id_number,
+		`c_a_birthday`,c_a_residence_address,`c_a_ID_address`,`c_a_cardno`,`c_a_bankname`,
+		`c_a_bank`,`c_a_cardOwner`,`c_a_ownerID`,c_a_phone_number,a_base_id,serialNo,age,company_name)
+		values
+		(#{customerType},#{relationship},#{reason},#{realName},#{gender},#{idNo},
+		#{birthday},#{liveAddress},#{domicileAddress},#{bankNumber},#{bankName},
+		#{bankBranch},#{bankUser},#{bankIdno},#{telePhone},#{appBaseId},#{serialNo},#{age},#{companyName}
+		)
+	</insert>
+
+	<!--添加配偶信息 -->
+	<insert id="insertCouple" useGeneratedKeys="true" keyProperty="mateInfo"
+		parameterType="com.ejie.nbrs.ejieinterface.entity.MasterInfo">
+		replace into mate_info
+		(`mate_name`,`mate_id_number`,mate_age,mate_gender,`mate_phone_number`,
+		`mate_education_background`,`mate_residence_address`,mate_permanent_address,serialNo)
+		values (#{spouseName},#{spouseIdno},#{spouseAge},#{spouseGender},
+		#{spousePhone},#{spouseEducation},#{spouseHomeAddr},#{spouseRegisterAddr},#{serialNo})
+	</insert>
+
+	<!--添加抵押车信息 -->
+	<insert id="insertMortgagerCar" useGeneratedKeys="true"
+		keyProperty="mCarid" parameterType="com.ejie.nbrs.ejieinterface.entity.EMortgager">
+		replace into mortgage_car
+		(mcar_id,mcar_brand,license_plate_number,mcar_vin,
+		mcar_engine_number,mcar_buy_date,mcar_value,serialNo
+		)
+		values
+		(#{mCId},#{brandModel},#{plateNumber},#{frameNumber},
+		#{engineNumber},#{buyTime},#{totalPrice},#{serialNo})
+	</insert>
+	<!--添加抵押房信息 -->
+	<insert id="insertMortgagerHouse" useGeneratedKeys="true"
+		keyProperty="mHouseid" parameterType="com.ejie.nbrs.ejieinterface.entity.EMortgager">
+		insert into mortgage_house
+		(mhouse_id,g_category,property_right_number,and_status,
+		property_owner,house_type,garanty_object,ejie_guarantee_id,guarantee_no,
+		g_address,acreage,house_area,priceRate,mhouse_value,mortgager_tel,c_number,serialNo,wuhouse_value
+		)
+		values
+		(#{mHId},#{garantyType},#{certificateNo},#{houseType},
+		#{ownerName},#{houseType},#{garantyObject},#{guarantyId},#{guarantyNo},
+		#{certificateAddr},#{buildArea},#{location},#{priceRate},#{totalPrice},#{mortgagerTel},#{IDNumber},#{serialNo},#{worldUniteAssessTotal}
+		)ON DUPLICATE KEY UPDATE
+                mhouse_id=VALUES(mhouse_id),
+                g_category=VALUES(g_category),
+                and_status=VALUES(and_status), 	
+                property_owner=VALUES(property_owner),                
+                house_type=VALUES(house_type),
+                ejie_guarantee_id=VALUES(ejie_guarantee_id),
+                guarantee_no=VALUES(guarantee_no),
+                garanty_object=VALUES(garanty_object),
+                g_address=VALUES(g_address),
+                house_area=VALUES(house_area),
+                priceRate=VALUES(priceRate),
+                mhouse_value=VALUES(mhouse_value),
+                serialNo=VALUES(serialNo),    
+                wuhouse_value=VALUES(wuhouse_value)    
+	</insert>
+	<!--添加抵押物关联信息 -->
+	<insert id="insertGuarantee" useGeneratedKeys="true"
+		keyProperty="id" parameterType="com.ejie.nbrs.entity.Guarantee">
+		replace into guarantee
+		(loan_id,mhouse_id,guarantee_id,mcar_id,serialNo)
+		values
+		(#{loanId},#{mhouseId},#{guaranteeId},#{mcarId},#{serialNo})
+	</insert>
+	<!--添加抵押物关联信息 -->
+	<insert id="insertGuaranteeValue" useGeneratedKeys="true"
+		keyProperty="guaVId" parameterType="com.ejie.nbrs.entity.GuaranteeValue">
+		insert into guarantee_value
+		(ejie_comfirm_value,wu_comfirm_value,guarantee_id,g_status,g_rate,wu_rate,serialNo)
+		values
+		(#{ejieComfirmValue},#{wuComfirmValue},#{guaranteeId},#{gStatus},#{gRate},#{wuRate},#{serialNo})
+		ON DUPLICATE KEY UPDATE
+                ejie_comfirm_value=VALUES(ejie_comfirm_value),
+                wu_comfirm_value=VALUES(wu_comfirm_value),
+                guarantee_id=VALUES(guarantee_id), 	
+                g_status=VALUES(g_status),                
+                g_rate=VALUES(g_rate),
+                wu_rate=VALUES(wu_rate)
+	</insert>
+	<!--添加抵押物关联信息 -->
+	<insert id="insertRepaySchInfo" useGeneratedKeys="true"
+		keyProperty="id" parameterType="com.ejie.nbrs.ejieinterface.entity.RepaymentSchedule">
+		insert into guarantee_value
+		(ejie_comfirm_value,guarantee_id,g_status)
+		values
+		(#{comfirmValue},#{guaranteeId},#{status})
+	</insert>
+
+	<select id="updateLoanInfo" resultType="com.ejie.nbrs.ejieinterface.entity.EMortgager"
+		 >
+		SELECT serialNo from mortgage_house	
+	</select>
+
+
+	 <update id="updateMortgagerHouse" parameterType="com.ejie.nbrs.ejieinterface.entity.EMortgager" >
+		update mortgage_house  set guarantee_no = #{guarantyNo} , ejie_guarantee_id =  #{guarantyId},house_area=  #{location}
+		where 
+		serialNo=#{serialNo}	
+		
+		
+	</update> 
+</mapper>

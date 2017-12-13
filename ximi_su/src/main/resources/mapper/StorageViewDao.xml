@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.StorageViewDao">
+
+	<!--通过贷款编号查看操作日志信息 -->
+	<select id="selectLogManagementList" parameterType="Integer"
+		resultType="com.ejie.nbrs.entity.LogManagement">
+		SELECT
+		log_id,loan_id,log_operate_type,log_operator,
+		log_date,log_details,log_module_type
+		FROM
+		log_management
+		WHERE
+		loan_id=#{loanId}
+		<if test="logModuleType != null and logModuleType != ''">
+		and log_module_type=#{logModuleType}
+		</if>
+	</select>
+
+	<!--添加日志管理记录 -->
+	<insert id="insertLogManagement" parameterType="com.ejie.nbrs.entity.LogManagement">
+		INSERT
+		INTO
+		log_management
+		(loan_id,log_operate_type,log_operator,
+		log_date,log_details,log_module_type,operate_ip)
+		VALUES
+		(#{loanId},#{logOperateType},#{logOperator},
+		#{logDate},#{logDetails},#{logModuleType},#{operateIp})
+
+	</insert>
+
+	<!--通过贷款编号查询抵押物表 -->
+	<select id="selectGuarantee" resultType="com.ejie.nbrs.entity.Guarantee"
+		parameterType="String">
+		SELECT
+		id,loan_id,guarantee_id,mcar_id,mhouse_id,serialNo
+		FROM
+		guarantee
+		WHERE
+		serialNo=#{serialNo}
+	</select>
+
+
+	<!--新：查看指定押品id的押品详细信息 -->
+	<select id="newProducInformation" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.productDetails">
+		SELECT
+		loan_id,gm_app_id,out_remark,out_reason,
+		gm_accessory,g_id
+		from
+		guarantee_management
+		WHERE
+		loan_id=#{loanId}
+	</select>
+
+	<!--根据抵押人id查询抵押人 -->
+	<select id="selectMortgagerListByGmAppId" parameterType="Integer"
+		resultType="com.ejie.nbrs.entity.Mortgager">
+		SELECT
+		mortgager_id, m_h_id, m_c_id, mortgager_name,
+		mortgager_tel,
+		c_type, c_number, a_base_id, c_a_info_id
+		FROM
+		mortgager
+		WHERE
+		gm_app_id=#{gmAppId}
+
+	</select>
+
+	<!--根据抵押车id查询 查询抵押车 -->
+	<select id="selectMortgageCarListByGmAppId" parameterType="String"
+		resultType="com.ejie.nbrs.entity.MortgageCar">
+		SELECT
+		m_c_id, mcar_id, mcar_brand,
+		mcar_version,
+		license_plate_number, mcar_vin,
+		mcar_engine_number, mcar_buy_date,
+		mcar_buy_price,mcar_value
+		status, warrant_id
+		FROM
+		mortgage_car
+		WHERE
+		mcar_id=#{mcarId}
+	</select>
+
+	<!--根据抵押房id查询 查询抵押车房 -->
+	<select id="selectMortgageHouseListByGmAppId" parameterType="String"
+		resultType="com.ejie.nbrs.entity.MortgageHouse">
+		SELECT
+		m_h_id, mhouse_id, g_category,
+		mhouse_value,
+		property_right_number, property_owner,
+		acreage, g_address, and_status,
+		house_area, land_certificate, get_method,
+		warrant_id, status,CONCAT(guarantee_no,LPAD(m_h_id, 6, 0)) AS guarantee_no
+		FROM
+		mortgage_house
+		WHERE
+		mhouse_id=#{mhouseId}
+	</select>
+
+	<!--根据权证id查询权证信息 -->
+	<select id="selectWarrantByWarrantId" parameterType="String"
+		resultType="com.ejie.nbrs.entity.Warrant">
+		SELECT
+		warrant_id, warrant_type, c_type, is_complete,
+		Incomplete_reason, issue_dept, issue_date,
+		handle_dept, Storage_dept,
+		remark, status
+		FROM
+		warrant
+		WHERE
+		warrant_id=#{warrantId}
+
+	</select>
+
+	<!--添加押品管理数据 -->
+	<insert id="insertStorage" useGeneratedKeys="true" keyProperty="gMId"
+		parameterType="com.ejie.nbrs.entity.GuaranteeManagement">
+		insert into
+		guarantee_management
+		(loan_id,g_id,gm_app_id,gm_status,gm_type,final_transfer_date,gm_in_time)
+		values
+		(#{loanId},#{gId},#{gmAppId},0,#{gmType},#{finalTransferDate},#{gmInTime})
+		
+		ON DUPLICATE KEY UPDATE
+		loan_id=values(loan_id),
+		g_id=values(g_id),
+		gm_app_id=values(gm_app_id),
+		gm_status=0,
+		gm_type=values(gm_type),
+		final_transfer_date=values(final_transfer_date),
+		gm_in_time=values(gm_in_time)
+	</insert>
+
+	<!--查看指定id的押品详细信息 -->
+	<select id="searchProducInformation" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.ProducInformation">
+		SELECT
+		mortgager_name, c_number, mhouse_id,
+		g_category,
+		mhouse_value, property_right_number,
+		property_owner, acreage,
+		g_address,
+		house_area, old_value, is_complete,
+		Incomplete_reason,
+		warrant_type, issue_dept,
+		issue_date, Storage_dept,
+		loan_id,
+		gm_accessory
+		FROM
+		product_information
+		WHERE
+		mhouse_id=#{loanId}
+	</select>
+
+	<!--修改（增加）指定loan_id下的附件信息 -->
+	<update id="alterProductView" parameterType="com.ejie.nbrs.dto.SearchCondition">
+		UPDATE
+		guarantee_management SET
+		gm_status=#{status}
+		<if test="outReason != null">
+			,out_reason=#{outReason}
+		</if>
+		<if test="outRemark != null">
+			,out_remark=#{outRemark}
+		</if>
+		<if test="startTime != null">
+			,gm_in_time=#{startTime}
+		</if>
+		<if test="endTime != null">
+			,gm_out_time=#{endTime}
+		</if>
+		<if test="loanVoucher != null">
+			,gm_accessory=#{loanVoucher}
+		</if>
+		<if test="inApplyTime != null">
+			,in_applyTime=#{inApplyTime}
+		</if>
+		<if test="outApplyTime != null">
+			,out_applyTime=#{outApplyTime}
+		</if>
+		WHERE
+		loan_id=#{loanId}
+	</update>
+
+
+	<!--修改指定guarantee_id的状态码 -->
+	<update id="alterInStorage" parameterType="com.ejie.nbrs.dto.SearchCondition">
+		UPDATE
+		guarantee_management SET
+		gm_status=#{status}
+		<if test="outRemark != null">
+			,out_remark=#{outRemark}
+		</if>
+		<if test="endTime != null">
+			,gm_out_time=#{endTime}
+		</if>
+		WHERE
+		loan_id=#{loanId}
+	</update>
+
+
+	<!--通过传入loanId查询出入库信息 -->
+	<select id="searchProductView" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.entity.ProductView">
+		SELECT
+		g_id, gm_type, loan_id,
+		out_remark, nb_comfirm_value as comfirm_value,
+		old_value,
+		out_reason, gm_accessory, g_m_id,
+		mhouse_id,loan_image,in_applyTime,out_applyTime,serialNo
+		from
+		product_view
+		WHERE
+		loan_id =#{loanId}
+	</select>
+
+	<!--查询出入库记录条数 -->
+	<select id="searchCountStorage" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		COUNT(1)
+		FROM
+		storageview
+		where 1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and mortgager_name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+		<if test="loanId !='' and loanId !=null">
+			and loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+
+		<choose>
+			<when test="status == -5">
+				and (g_status=0 or g_status=3)
+			</when>
+			<when test="status == -1">
+				and (g_status=1 or g_status=2)
+				<if test="startTime!='' and startTime!=null">
+					and gm_in_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_in_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -6">
+				and (g_status=7 or g_status=6)
+			</when>
+			<when test="status == -2">
+				and (g_status=4 or g_status=5)
+				<if test="startTime!='' and startTime!=null">
+					and gm_out_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_out_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -3">
+				and (g_status=2 or g_status=3 or g_status=5 or
+				g_status=6)
+			</when>
+			<otherwise>
+				and g_status=#{status}
+			</otherwise>
+		</choose>
+
+
+	</select>
+
+	<!--查询出入库记录list -->
+	<select id="storageViewList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.StorageView">
+		SELECT
+		guarantee_id, loan_id, final_transfer_date,
+		g_category,
+		property_owner, mortgager_name,
+		comfirm_value, g_status,
+		repayment_date,gm_in_time,gm_out_time,out_remark,out_reason
+		FROM
+		storageview
+		where
+		1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and mortgager_name like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+
+		<if test="loanId !='' and loanId !=null">
+			and loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+
+		<choose>
+			<when test="status == -5">
+				and (g_status=0 or g_status=3)
+			</when>
+			<when test="status == -1">
+				and (g_status=1 or g_status=2)
+				<if test="startTime!='' and startTime!=null">
+					and gm_in_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_in_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -6">
+				and (g_status=7 or g_status=6)
+			</when>
+			<when test="status == -2">
+				and (g_status=4 or g_status=5)
+				<if test="startTime!='' and startTime!=null">
+					and gm_out_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_out_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -3">
+				and (g_status=2 or g_status=3 or g_status=5 or
+				g_status=6)
+			</when>
+			<otherwise>
+				and g_status=#{status}
+			</otherwise>
+		</choose>
+
+
+
+		ORDER BY guarantee_id
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+	<!--_____________________________________________________________________________________________________________ -->
+	<!--新：查询出入库记录条数 -->
+	<select id="newSearchCountStorage" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		COUNT(1)
+		FROM
+		newstorageview
+		where
+		1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and property_owner like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+
+		<if test="loanId !='' and loanId !=null">
+			and loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+
+		<choose>
+			<when test="status == -5">
+				and (gm_status=0 or gm_status=3)
+			</when>
+			<when test="status == -1">
+				and gm_status &gt; 0
+				<if test="startTime!='' and startTime!=null">
+					and gm_in_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_in_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -6">
+				and (gm_status=7 or gm_status=6)
+			</when>
+			<when test="status == -2">
+				and (gm_status=4 or gm_status=5 or gm_status=5)
+				<if test="startTime!='' and startTime!=null">
+					and gm_out_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_out_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -3">
+				and (gm_status=2 or gm_status=3 or gm_status=5 or
+				gm_status=6)
+			</when>
+			<otherwise>
+				and gm_status=#{status}
+			</otherwise>
+		</choose>
+
+	</select>
+
+
+	<!--新：查询出入库结果集 -->
+	<select id="newStorageViewList" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.NewStorageView">
+		SELECT
+		g_id, loan_id, final_transfer_date,
+		(CASE gm_type WHEN '住房' THEN '房产' WHEN '商铺' THEN '房产' WHEN '写字楼' THEN '房产' ELSE '车' END) AS gm_type,
+		gm_status,mhouse_id,
+		mhouse_value, property_owner, gm_app_id,
+		m_h_id,
+		gm_in_time,
+		out_reason,gm_out_time,
+		in_applyTime,out_applyTime,CONCAT(guarantee_no,LPAD(m_h_id, 6, 0)) AS guarantee_no,real_name,serialNo
+
+		FROM
+		newstorageview
+		where
+		1=1
+		<if test="aBaseName !='' and aBaseName !=null">
+			and property_owner like
+			concat(concat('%','${aBaseName}'),'%')
+		</if>
+
+		<if test="loanId !='' and loanId !=null">
+			and loan_id like concat(concat('%','${loanId}'),'%')
+		</if>
+
+		<choose>
+			<when test="status == -5">
+				and (gm_status=0 or gm_status=3)
+			</when>
+			<when test="status == -1">
+				and gm_status &gt; 0
+				<if test="startTime!='' and startTime!=null">
+					and gm_in_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_in_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -6">
+				and (gm_status=7 or gm_status=6)
+			</when>
+			<when test="status == -2">
+				and (gm_status=4 or gm_status=5 or gm_status=6)
+				<if test="startTime!='' and startTime!=null">
+					and gm_out_time &gt;= #{startTime}
+				</if>
+				<if test="endTime!='' and endTime!=null">
+					and gm_out_time &lt;= #{endTime}
+				</if>
+			</when>
+			<when test="status == -3">
+				and (gm_status=2 or gm_status=3 or gm_status=5 or
+				gm_status=6)
+			</when>
+			<otherwise>
+				and gm_status=#{status}
+			</otherwise>
+		</choose>
+		ORDER BY final_transfer_date
+		DESC
+		limit #{dataIndex},#{pageSize}
+
+	</select>
+
+	<!--查询还款计划表信息 -->
+	<select id="selectRepaymentScheduleByLoanId" parameterType="Integer"
+		resultType="com.ejie.nbrs.ejieinterface.entity.RepaymentSchedule">
+		SELECT
+		loan_id, serial_no, loan_amount, loan_date,
+		repay_limit, repay_method,
+		loan_rate,
+		star_date, last_date,
+		left_capital,
+		all_overdue_days,clear_date
+		FROM
+		repayment_schedule
+		WHERE
+		loan_id=#{loanId}
+
+	</select>
+
+
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.dao.TempletPrintLoanDao">
+
+	<!--查询打印放款初审表 -->
+	<select id="selectePrintLoanView" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.entity.PrintLoanView">
+		SELECT
+		loan_id,serialNo,`name`,periods,rate,repay_way,
+		loan_purpose,c_card_number,repay_Card_No
+		from
+		printloanview
+		where
+		loan_id=#{loanId}
+	</select>
+
+	<!--查询打印授信初审表 -->
+	<select id="selectePrintCreditView" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.entity.PrintCreditView">
+		SELECT
+		loan_id,serialNo,`name`,id_number,companyName,
+		phoneNumber,periods,repayWay,rate,loan_purpose,age
+		FROM 
+		printcreditview
+		where
+		loan_id=#{loanId}
+	</select>
+
+</mapper>

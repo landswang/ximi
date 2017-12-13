@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ejie.nbrs.ejieinterface.dao.NewOrderDao" >
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Short" >
+    delete from ejie_neworder
+    where serialNo = #{serialNo}
+  </delete>
+  <insert id="insert"  parameterType="com.ejie.nbrs.ejieinterface.entity.NewOrder" >
+    insert into ejie_neworder 
+    ( serialNo, city, 
+      realName, loanDate, garantyType, 
+      repayMethod, loanAmount, loanRate,status,
+      loanLimit)
+    values ( #{serialNo}, #{city}, 
+      #{realName}, #{createTime}, '好事贷', 
+      #{repayMethod}, #{loanAmount}, #{loanRate},#{status},
+      #{loanLimit})      
+        ON DUPLICATE KEY UPDATE
+                serialNo=values(serialNo),
+                realName=values(realName),
+                garantyType='好事贷',
+                repayMethod=values(repayMethod),
+                loanAmount=values(loanAmount),
+                loanRate=values(loanRate),
+                loanLimit=values(loanLimit)
+  </insert>
+  
+  
+  <insert id="insertList">
+	  insert into ejie_neworder
+	  (serialNo, city, 
+	      realName, loanDate, garantyType, 
+	      repayMethod, loanAmount, loanRate,status,
+	      loanLimit)
+	        values
+	  <foreach collection="neworder"  item="p" index="serialNo" separator=",">
+               (#{p.pname},
+                #{p.idcard},
+                #{p.gender},
+                #{p.nation},
+                #{p.sourceFlag},
+                #{p.createTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+                pname=values(pname),
+                idcard=values(idcard),
+                gender=values(gender),
+                nation=values(nation)
+	</insert>
+  
+  	<!--查询未审核总条数 -->
+	<select id="SearchCount" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="Integer">
+		SELECT
+		COUNT(1)
+		from
+		ejie_neworder
+		where status=#{status}
+
+	</select>
+
+	<!--授信终审新记录 -->
+	<select id="searchAllNew" parameterType="com.ejie.nbrs.dto.SearchCondition"
+		resultType="com.ejie.nbrs.dto.LoaninfoIndex">
+		SELECT
+		serialNo as serialNo,
+		loan_Id as loan_id,
+		app_date as app_date,
+		e_product as e_product,
+		city as    city,
+		flow_status as 'status',
+		real_Name as NAME  ,
+		app_money as app_money,
+		rate as rate,
+		node_status,
+		repay_way as repay_way
+		from
+		loan_info
+		ORDER BY app_date
+		DESC
+		limit #{dataIndex},#{pageSize}
+	</select>
+	
+	<update id="updateLoanId" parameterType="com.ejie.nbrs.ejieinterface.entity.NewOrder">
+		UPDATE
+		ejie_neworder		
+		SET
+		loanId = #{loanId}
+		where
+		serialNo =#{serialNo}
+	</update>
+
+</mapper>
